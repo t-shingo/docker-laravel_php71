@@ -2,10 +2,10 @@ version: '3'
 
 services:
   php:
-    image: php:7.4-rc-fpm
+    build: ./dockerfile/php
     container_name: php
     volumes:
-    - ../webapps:/var/www
+    - ../webapps:/var/www/html
 
   nginx:
     image: nginx
@@ -13,7 +13,7 @@ services:
     ports:
     - 80:80
     volumes:
-    - ../webapps:/var/www
+    - ../webapps:/var/www/html
     - ./nginx:/etc/nginx/conf.d
     depends_on:
     - php
