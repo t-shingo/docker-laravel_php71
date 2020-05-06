@@ -1,22 +1,27 @@
 version: '3'
 
 services:
-  php:
-    build: ./dockerfile/php
-    container_name: php
-    volumes:
-    - ../webapps:/var/www/html
-
   nginx:
     image: nginx
-    container_name: nginx
     ports:
-    - 80:80
+      - 80:80
+      - 443:443
     volumes:
-    - ../webapps:/var/www/html
-    - ./nginx:/etc/nginx/conf.d
+      - ./nginx:/etc/nginx/conf.d
+      - ../../blog/laravel:/var/www/html # プロジェクト変更時に更新すること
+    networks:
+      - docker-laravel-php71-network
     depends_on:
-    - php
+      - fpm
+
+  fpm:
+    build: ./dockerfile/php
+    volumes:
+      - ../../blog/laravel:/var/www/html # プロジェクト変更時に更新すること
+    ports:
+      - 9000:9000
+    networks:
+      - docker-laravel-php71-network
 
   db:
     image: mysql:5.7
@@ -29,9 +34,16 @@ services:
       TZ: 'Asia/Tokyo'
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-    - ../mysql57/db/data:/var/lib/mysql
-    - ../mysql57/db/my.cnf:/etc/mysql/conf.d/my.cnf
-    - ../mysql57/db/sql:/docker-entrypoint-initdb.d
+      - ../mysql57/db/data:/var/lib/mysql
+      - ../mysql57/db/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ../mysql57/db/sql:/docker-entrypoint-initdb.d
     ports:
-    - 3306:3306
+      - 3306:3306
+    networks:
+      - docker-laravel-php71-network
 
+networks:
+  docker-laravel-php71-network:
+      ipam:
+          config:
+              - subnet: 172.18.0.0/24
